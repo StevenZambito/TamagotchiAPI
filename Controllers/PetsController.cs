@@ -35,7 +35,7 @@ namespace TamagotchiAPI.Controllers
         {
             // Uses the database context in `_context` to request all of the Pets, sort
             // them by row id and return them as a JSON array.
-            return await _context.Pets.OrderBy(row => row.Id).ToListAsync();
+            return await _context.Pets.Include(pets => pets.Playtimes).Include(pets => pets.Feedings).Include(pets => pets.Scoldings).OrderBy(row => row.Id).ToListAsync();
         }
 
         // GET: api/Pets/5
@@ -48,7 +48,7 @@ namespace TamagotchiAPI.Controllers
         public async Task<ActionResult<Pet>> GetPet(int id)
         {
             // Find the pet in the database using `FindAsync` to look it up by id
-            var pet = await _context.Pets.FindAsync(id);
+            var pet = await _context.Pets.Include(pets => pets.Playtimes).Include(pets => pets.Feedings).Include(pets => pets.Scoldings).SingleOrDefaultAsync(pet => pet.Id == id);
 
             // If we didn't find anything, we receive a `null` in return
             if (pet == null)
@@ -133,6 +133,7 @@ namespace TamagotchiAPI.Controllers
             return CreatedAtAction("GetPet", new { id = pet.Id }, pet);
         }
 
+
         // DELETE: api/Pets/5
         //
         // Deletes an individual pet with the requested id. The id is specified in the URL
@@ -158,6 +159,79 @@ namespace TamagotchiAPI.Controllers
 
             // Return a copy of the deleted data
             return Ok(pet);
+        }
+
+        [HttpPost("{id}/feedings")]
+        public async Task<ActionResult<Pet>> PostFeeding(int id)
+        {
+            var petToAddFeeding = await _context.Pets.FindAsync(id);
+
+            if (petToAddFeeding == null)
+            {
+                return NotFound();
+            }
+
+            petToAddFeeding.HappinessLevel += 3;
+            petToAddFeeding.HungerLevel -= 5;
+
+            var feeding = new Feeding();
+
+            feeding.PetId = petToAddFeeding.Id;
+
+            feeding.When = DateTime.Now;
+
+            _context.Feedings.Add(feeding);
+            await _context.SaveChangesAsync();
+
+            return Ok(petToAddFeeding);
+        }
+
+        [HttpPost("{id}/playtimes")]
+        public async Task<ActionResult<Pet>> PostPlaytime(int id)
+        {
+            var petToAddPlaytime = await _context.Pets.FindAsync(id);
+
+            if (petToAddPlaytime == null)
+            {
+                return NotFound();
+            }
+
+            petToAddPlaytime.HappinessLevel += 5;
+            petToAddPlaytime.HungerLevel += 3;
+
+            var playtime = new Playtime();
+            playtime.PetId = petToAddPlaytime.Id;
+
+            playtime.When = DateTime.Now;
+
+            _context.Playtimes.Add(playtime);
+            await _context.SaveChangesAsync();
+
+            return Ok(petToAddPlaytime);
+        }
+
+        [HttpPost("{id}/scoldings")]
+        public async Task<ActionResult<Pet>> PostScolding(int id)
+        {
+            var petToAddScolding = await _context.Pets.FindAsync(id);
+
+            if (petToAddScolding == null)
+            {
+                return NotFound();
+            }
+
+            petToAddScolding.HappinessLevel -= 5;
+
+            var scolding = new Scolding();
+
+            scolding.PetId = petToAddScolding.Id;
+
+            scolding.When = DateTime.Now;
+
+            _context.Scoldings.Add(scolding);
+            await _context.SaveChangesAsync();
+
+            return Ok(petToAddScolding);
         }
 
         // Private helper method that looks up an existing pet by the supplied id

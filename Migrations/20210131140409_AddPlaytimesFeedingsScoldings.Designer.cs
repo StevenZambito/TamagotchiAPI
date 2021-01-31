@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TamagotchiAPI.Models;
@@ -9,9 +10,10 @@ using TamagotchiAPI.Models;
 namespace TamagotchiAPI.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20210131140409_AddPlaytimesFeedingsScoldings")]
+    partial class AddPlaytimesFeedingsScoldings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -29,7 +31,7 @@ namespace TamagotchiAPI.Migrations
                     b.Property<int>("PetId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("When")
+                    b.Property<DateTime>("WHen")
                         .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
@@ -116,11 +118,13 @@ namespace TamagotchiAPI.Migrations
 
             modelBuilder.Entity("TamagotchiAPI.Models.Playtime", b =>
                 {
-                    b.HasOne("TamagotchiAPI.Models.Pet", null)
+                    b.HasOne("TamagotchiAPI.Models.Pet", "TheAssociatedPet")
                         .WithMany("Playtimes")
                         .HasForeignKey("PetId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("TheAssociatedPet");
                 });
 
             modelBuilder.Entity("TamagotchiAPI.Models.Scolding", b =>
